@@ -58,15 +58,22 @@ def upload_file():
         # Calculate the adherence rate
         merged_df['Adherence Rate'] = (merged_df['Actual Quantity'] / merged_df['Planned Quantity']) * 100
         
+        # Replace infinite values in 'Adherence Rate' with NaN
+        merged_df['Adherence Rate'].replace([float('inf'), -float('inf')], pd.NA, inplace=True)
+        
+        # Drop rows with NaN values in 'Adherence Rate'
+        merged_df = merged_df.dropna(subset=['Adherence Rate'])
+        
         # Print the merged dataframe for debugging
         print("Merged DataFrame:")
         print(merged_df)
         
         # Save the results to a new Excel file in a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_path = os.path.join(temp_dir, 'Adherence_Rate.xlsx')
-            merged_df.to_excel(output_path, index=False)
-            return send_file(output_path, as_attachment=True)
+        temp_dir = tempfile.mkdtemp()
+        output_path = os.path.join(temp_dir, 'Adherence_Rate.xlsx')
+        merged_df.to_excel(output_path, index=False)
+        
+        return send_file(output_path, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
